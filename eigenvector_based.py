@@ -1,36 +1,14 @@
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 import seaborn as sns
 
 from itertools import cycle, islice
 from sklearn import datasets
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import rbf_kernel
+from sklearn.preprocessing import StandardScaler
 
 
-
-# DATASET GENERATION AND PREPARATION
-np.random.seed(0)
-n_samples = 1500
-
-blobs = datasets.make_blobs(n_samples=n_samples, random_state=8)
-# varied = datasets.make_blobs(n_samples=n_samples, cluster_std=[1.0, 2.5, 0.5], random_state=170)
-X, y = blobs
-X = StandardScaler().fit_transform(X) # normalize dataset for easier parameter selection
-D = pairwise_distances(X) # Distance matrix as euclidean distance
-
-mult = 42
-gamma = 1 / (mult * np.var(D))
-A = rbf_kernel(D, gamma=gamma) # Gaussian distance function
-    
-# Compute eigenvalues-eigenvectors
-evals, evects = np.linalg.eig(A)
-evects = evects.T # from column to row vectors
-
-
-# CLUSTERING
 def eigenvector_thresholding(evect, threshold, clustered_elements):
     clustered_idx = []
     new_clustered_elements = clustered_elements.copy()
@@ -61,66 +39,75 @@ def generate_cluster_matrix(A, clusters):
     return res
 
 
-threshold = 0.001
-bigger_eig_id = 0
-clusters = []
-clustered_elements = []
-continue_clustering = True
+def main():
+    # DATASET GENERATION AND PREPARATION
+    np.random.seed(0)
+    N_SAMPLES = 1500
 
-while(continue_clustering):
-    if np.amax(evals) == -float("inf"):
-        break;
-    bigger_eig_id = np.argmax(evals)
-    cluster, clustered_elements = eigenvector_thresholding(evects[bigger_eig_id], threshold, clustered_elements)
-    clusters.append(cluster)
-    if len(clustered_elements) == n_samples:
-        continue_clustering = False
-    evals[bigger_eig_id] = -float("inf")
+    blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
+    # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
+    X, _ = blobs
+    X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
+    D = pairwise_distances(X)  # euclidean distance as distance metric 
 
-print(len(clusters), "clusters found")
+    mult = 42
+    gamma = 1 / (mult * np.var(D))
+    A = rbf_kernel(D, gamma=gamma)  # Gaussian distance as affinity metric
+        
+    evals, evects = np.linalg.eig(A)
+    evects = evects.T  # from column-eigenvectors to row-eigenvectors
 
 
-# PLOTTING
-colors = np.array(list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628',
-                                    '#984ea3', '#999999', '#e41a1c', '#dede00']),
-                              int(len(clusters)+ 1))))
-symbols = np.array(list(islice(cycle(["*","x","+","o",".","^","<",">","P","p","X","D","d"]),
-                              len(clusters) + 1)))
+    # CLUSTERING
+    threshold = 0.001
+    bigger_eig_id = 0
+    clusters = []
+    clustered_elements = []
+    continue_clustering = True
 
-plt.figure(0)
-plt.subplot(2, 3, 1)
-plt.scatter(X[:, 0], X[:, 1], s=10)
-plt.grid()
-plt.title("Original Data")
+    while(continue_clustering):
+        if np.amax(evals) == -float("inf"):
+            break;
+        bigger_eig_id = np.argmax(evals)
+        cluster, clustered_elements = eigenvector_thresholding(evects[bigger_eig_id], 
+                                                               threshold, clustered_elements)
+        clusters.append(cluster)
+        if len(clustered_elements) == N_SAMPLES:
+            continue_clustering = False
+        evals[bigger_eig_id] = -float("inf")
+    print(len(clusters), "clusters found")
 
-G = nx.Graph()
-for node in range(len(X)):
-    G.add_node(node)
 
-G.add_edges_from(nx.from_numpy_array(A).edges())
-plt.subplot(2, 3, 2)
-nx.draw_networkx(G, [(x, y) for x, y in X], node_size=15, with_labels=False)
-plt.grid()
-plt.title("Graph Data")
+    # PLOTTING
+    colors = list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', 
+                                '#999999', '#e41a1c', '#dede00']), len(clusters) + 1))
+    symbols = list(islice(cycle(["*","x","+","o",".","^","<",">","P","p","X","D","d"]),
+                                len(clusters) + 1))
 
-plt.subplot(2, 3, 3)
-plt.title("Affinity matrix")
-sns.heatmap(A, square = True, cbar_kws={"shrink": .2})
+    plt.figure(0)
+    plt.subplot(2, 2, 1)
+    plt.scatter(X[:, 0], X[:, 1], s=10)
+    plt.grid()
+    plt.title("Original Data")
 
-plt.subplot(2, 3, 4)
-plt.grid()
-for i in range(len(clusters)):
-    plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
-plt.title("Clustered data")
+    plt.subplot(2, 2, 2)
+    plt.title("Affinity matrix")
+    sns.heatmap(A, square = True)
 
-plt.subplot(2, 3, 5)
-plt.scatter(list(range(len(evals))), evals, s=10)
-plt.grid()
-plt.title("Eigenvalues")
+    plt.subplot(2, 2, 3)
+    plt.grid()
+    for i in range(len(clusters)):
+        plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
+    plt.title("Clustered data")
 
-plt.subplot(2, 3, 6)
-plt.title("Clusters affinity matrix")
-sns.heatmap(generate_cluster_matrix(A, clusters), square = True, cbar_kws={"shrink": .2})
+    plt.subplot(2, 2, 4)
+    plt.title("Clusters affinity matrix")
+    sns.heatmap(generate_cluster_matrix(A, clusters), square = True)
 
-plt.show()
+    manager = plt.get_current_fig_manager()
+    manager.window.showMaximized()
+    plt.show()
 
+
+if __name__ == '__main__':
+    main()
