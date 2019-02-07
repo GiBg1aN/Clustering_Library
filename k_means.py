@@ -17,12 +17,8 @@ def compute_centroids(data, clusters):
     return new_centroids
 
 
-def euclidean_dist(x, y):
-    return np.sqrt(np.dot(x, x) - 2 * np.dot(x, y) + np.dot(y, y))
-
-
 def generate_cluster_matrix(A, clusters):
-    res = np.zeros_like(A)
+    res = np.empty_like(A)
     supp = []
     for i in range(len(clusters)):
         for j in range(len(clusters[i])):
@@ -53,21 +49,19 @@ def main():
     # CLUSTERING
     K = 3
     epsilon = 0.0001
-    clusters = []
     centroids = []
     continue_clustering = True
         
     for _ in range(K):  # Init random centroids
         i = np.random.choice(X.shape[0])
         centroids.append(X[i])
-        clusters.append([])
 
     while (continue_clustering):
         clusters = [[] for _ in range(K)]
         for i in range(X.shape[0]):
             distances = []
             for c in centroids:
-                distances.append(euclidean_dist(X[i], c))
+                distances.append(np.linalg.norm(X[i] - c))
             min_cluster_idx = np.argmin(distances)
             clusters[min_cluster_idx].append(i)
 
@@ -111,3 +105,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

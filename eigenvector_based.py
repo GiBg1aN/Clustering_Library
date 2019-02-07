@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 def eigenvector_thresholding(evect, threshold, clustered_elements):
     clustered_idx = []
     new_clustered_elements = clustered_elements.copy()
+
     for i in range(len(evect)):
         if i not in clustered_elements and abs(evect[i]) > threshold:
             clustered_idx.append(i)
@@ -19,15 +20,8 @@ def eigenvector_thresholding(evect, threshold, clustered_elements):
     return clustered_idx, new_clustered_elements
 
 
-def remove_clustered(evect, clustered_idx):
-    new_evect = evect.copy()
-    for x in clustered_idx:
-        new_evect[x] = 0 
-    return new_evect
-
-
 def generate_cluster_matrix(A, clusters):
-    res = np.zeros_like(A)
+    res = np.empty_like(A)
     supp = []
     for i in range(len(clusters)):
         for j in range(len(clusters[i])):
@@ -60,7 +54,6 @@ def main():
 
     # CLUSTERING
     threshold = 0.001
-    bigger_eig_id = 0
     clusters = []
     clustered_elements = []
     continue_clustering = True
@@ -75,6 +68,7 @@ def main():
         if len(clustered_elements) == N_SAMPLES:
             continue_clustering = False
         evals[bigger_eig_id] = -float("inf")
+
     print(len(clusters), "clusters found")
 
 
@@ -111,3 +105,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
