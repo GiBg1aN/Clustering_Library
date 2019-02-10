@@ -56,6 +56,8 @@ def main():
 
     blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
     # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
+    # noisy_moons = datasets.make_moons(n_samples=N_SAMPLES, noise=.05)
+    # noisy_circles = datasets.make_circles(n_samples=N_SAMPLES, factor=.5, noise=.05)
     X, _ = blobs
     X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
     D = pairwise_distances(X)  # euclidean distance as distance metric 
@@ -77,7 +79,7 @@ def main():
             cluster = extract_cluster(p, D, min_pts, epsilon, clustered_elements, False)
             if cluster != []:
                 clusters.append(cluster)
-    noise = [i for i in range(len(clustered_elements)) if not clustered_elements[i]]                
+    noise = [i for i in range(len(clustered_elements)) if not clustered_elements[i]]
 
 
     # PLOTTING
@@ -101,7 +103,7 @@ def main():
     for i in range(len(clusters)):
         plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
     plt.scatter(X[noise, 0], X[noise, 1], s=90, color='#000000', marker="X")
-    plt.title("Clustered data")
+    plt.title("Clustered data (" + str(len(clusters)) + " clusters found)")
 
     plt.subplot(2, 2, 4)
     plt.title("Clusters affinity matrix")

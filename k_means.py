@@ -37,6 +37,8 @@ def main():
 
     blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
     # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
+    # noisy_moons = datasets.make_moons(n_samples=N_SAMPLES, noise=.05)
+    # noisy_circles = datasets.make_circles(n_samples=N_SAMPLES, factor=.5, noise=.05)
     X, _ = blobs
     X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
     D = pairwise_distances(X)  # euclidean distance as distance metric 

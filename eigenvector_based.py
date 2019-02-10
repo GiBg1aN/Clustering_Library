@@ -40,6 +40,8 @@ def main():
 
     blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
     # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
+    # noisy_moons = datasets.make_moons(n_samples=N_SAMPLES, noise=.05)
+    # noisy_circles = datasets.make_circles(n_samples=N_SAMPLES, factor=.5, noise=.05)
     X, _ = blobs
     X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
     D = pairwise_distances(X)  # euclidean distance as distance metric 
@@ -69,8 +71,6 @@ def main():
             continue_clustering = False
         evals[bigger_eig_id] = -float("inf")
 
-    print(len(clusters), "clusters found")
-
 
     # PLOTTING
     colors = list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', 
@@ -92,7 +92,7 @@ def main():
     plt.grid()
     for i in range(len(clusters)):
         plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
-    plt.title("Clustered data")
+    plt.title("Clustered data (" + str(len(clusters)) + " clusters found)")
 
     plt.subplot(2, 2, 4)
     plt.title("Clusters affinity matrix")
