@@ -7,6 +7,7 @@ from sklearn import datasets
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.preprocessing import StandardScaler
+from utils import *
 
 
 def eigenvector_thresholding(evect, threshold, clustered_elements):
@@ -46,10 +47,11 @@ def main():
     X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
     D = pairwise_distances(X)  # euclidean distance as distance metric 
 
-    mult = 42
-    gamma = 1 / (mult * np.var(D))
-    A = rbf_kernel(D, gamma=gamma)  # Gaussian distance as affinity metric
-        
+    mult = 0.05
+    # gamma = 1 / (mult * np.var(D))
+    # A = rbf_kernel(D, gamma=gamma)  # Gaussian distance as affinity metric
+    A = gaussian_kernel(D, mult=mult, is_sym=True)  # Gaussian distance as affinity metric
+
     evals, evects = np.linalg.eig(A)
     evects = evects.T  # from column-eigenvectors to row-eigenvectors
 
@@ -62,7 +64,7 @@ def main():
 
     while(continue_clustering):
         if np.amax(evals) == -float("inf"):
-            break;
+            break
         bigger_eig_id = np.argmax(evals)
         cluster, clustered_elements = eigenvector_thresholding(evects[bigger_eig_id], 
                                                                threshold, clustered_elements)
