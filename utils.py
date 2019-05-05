@@ -4,8 +4,6 @@ import seaborn as sns
 
 from itertools import cycle, islice
 from sklearn import datasets
-from sklearn.metrics import pairwise_distances
-from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.preprocessing import StandardScaler
 
 def gaussian_kernel(A, mult=2, is_sym=False):
@@ -63,7 +61,7 @@ def generate_cluster_matrix(A, clusters):
             res[i, j] = A[supp[i], supp[j]]
     return res
 
-def plot_clustering_result(X, A, clusters, noise=None):
+def plot_clustering_result(X, A, clusters, noise=None, clustering_name="Generic clustering"):
     """
     Plot result of clustering process in a 2D space.
 
@@ -72,14 +70,13 @@ def plot_clustering_result(X, A, clusters, noise=None):
         A: affinity matrix between points in X
         clusters: vector of cluster identifiers for each point in X
         noise: vector of identifier for noise points
-
     """
     colors = list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', 
                                 '#999999', '#e41a1c', '#dede00']), len(clusters) + 1))
     symbols = list(islice(cycle(["*","x","+","o",".","^","<",">","P","p","X","D","d"]),
                                 len(clusters) + 1))
 
-    plt.figure(0)
+    plt.figure(num=clustering_name)
     plt.subplot(2, 2, 1)
     plt.scatter(X[:, 0], X[:, 1], s=10)
     plt.grid()
@@ -102,3 +99,29 @@ def plot_clustering_result(X, A, clusters, noise=None):
     manager = plt.get_current_fig_manager()
     manager.window.showMaximized()
     plt.show()
+
+def generate_dataset(n_samples=1500, shape="blobs"):
+    """
+    Generate a dataset according to inputs.
+
+    Args:
+        n_samples: number of points to generate
+        shape: string identifing the shape of dataset (blobs/varied/moons/circles)
+
+    Returns:
+        X: list of coordinates
+    """
+    np.random.seed(0)
+    
+    if shape == "blobs":
+        dataset = datasets.make_blobs(n_samples=n_samples, random_state=8)
+    if shape == "varied":
+        dataset = datasets.make_blobs(n_samples=n_samples, cluster_std=[1.0, 2.5, 0.5], random_state=170)
+    if shape == "moons":
+       dataset = datasets.make_moons(n_samples=n_samples, noise=.05)
+    if shape == "circles":
+       dataset = datasets.make_circles(n_samples=n_samples, factor=.5, noise=.05)
+    X, _ = dataset
+
+    X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
+    return X

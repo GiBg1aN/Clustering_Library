@@ -1,13 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
-from itertools import cycle, islice
-from sklearn import datasets
 from sklearn.metrics import pairwise_distances
-from sklearn.metrics.pairwise import rbf_kernel
-from sklearn.preprocessing import StandardScaler
-from utils import gaussian_kernel, plot_clustering_result
+from utils import gaussian_kernel, plot_clustering_result,generate_dataset
 
 
 def eigenvector_thresholding(evect, threshold, clustered_elements):
@@ -20,31 +15,25 @@ def eigenvector_thresholding(evect, threshold, clustered_elements):
             new_clustered_elements.append(i)
     return clustered_idx, new_clustered_elements
 
-def main():
-    # DATASET GENERATION AND PREPARATION
-    np.random.seed(0)
-    N_SAMPLES = 1500
 
-    blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
-    # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
-    # noisy_moons = datasets.make_moons(n_samples=N_SAMPLES, noise=.05)
-    # noisy_circles = datasets.make_circles(n_samples=N_SAMPLES, factor=.5, noise=.05)
-    X, _ = blobs
-    X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
-    D = pairwise_distances(X)  # euclidean distance as distance metric 
+def apply_eigenvector_based(X, A, threshold=0.001):
+    """
+    Apply k-means to set of points X, according to input parameters.
 
-    mult = 0.05
-    # gamma = 1 / (mult * np.var(D))
-    # A = rbf_kernel(D, gamma=gamma)  # Gaussian distance as affinity metric
-    A = gaussian_kernel(D, mult=mult, is_sym=True)  # Gaussian distance as affinity metric
+    Args:
+        X: list of 2d points
+        K: number of cluster to find
+        threshold: value for thresholding the characteristic vector
+    
+    Returns:
+        clusters: vector indicating cluster for each point in X
+        noise: vector of points not clustered
+    """
 
     evals, evects = np.linalg.eig(A)
     evects = evects.T  # from column-eigenvectors to row-eigenvectors
-
-
-    # CLUSTERING
-    threshold = 0.001
     clusters = []
+    noise = []
     clustered_elements = []
     continue_clustering = True
 
@@ -55,12 +44,8 @@ def main():
         cluster, clustered_elements = eigenvector_thresholding(evects[bigger_eig_id], 
                                                                threshold, clustered_elements)
         clusters.append(cluster)
-        if len(clustered_elements) == N_SAMPLES:
+        if len(clustered_elements) == len(X):
             continue_clustering = False
         evals[bigger_eig_id] = -float("inf")
-
-    plot_clustering_result(X, A, clusters)
-
-if __name__ == '__main__':
-    main()
-
+    return clusters, noise
+    

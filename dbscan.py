@@ -1,13 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
-from itertools import cycle, islice
-from sklearn import datasets
 from sklearn.metrics import pairwise_distances
-from sklearn.metrics.pairwise import rbf_kernel
-from sklearn.preprocessing import StandardScaler
-from utils import plot_clustering_result
+from utils import plot_clustering_result, generate_dataset, gaussian_kernel
 
 def is_core_point(n, min_pts):
     return n >= min_pts
@@ -35,27 +30,20 @@ def extract_cluster(point, D, min_pts, epsilon, clustered_elements, neighbor_sea
                 cluster += extract_cluster(q, D, min_pts, epsilon, clustered_elements, True)
     return cluster
 
-def main():
-    # DATASET GENERATION AND PREPARATION
-    np.random.seed(0)
-    N_SAMPLES = 1500
+def apply_dbscan(X, D, epsilon=0.2, min_pts=7):
+    """
+    Apply dbscan to set of points X, according to input parameters.
 
-    blobs = datasets.make_blobs(n_samples=N_SAMPLES, random_state=8)
-    # varied = datasets.make_blobs(n_samples=N_SAMPLES, cluster_std=[1.0, 2.5, 0.5], random_state=170)
-    # noisy_moons = datasets.make_moons(n_samples=N_SAMPLES, noise=.05)
-    # noisy_circles = datasets.make_circles(n_samples=N_SAMPLES, factor=.5, noise=.05)
-    X, _ = blobs
-    X = StandardScaler().fit_transform(X)  # normalize dataset for easier parameter selection
-    D = pairwise_distances(X)  # euclidean distance as distance metric 
+    Args:
+        X: list of 2d points
+        D: pairwise distance matrix
+        epsilon: radius for epsilon neighbourhood of a point
+        min_pts: minimum number of elements such that a point has high density
 
-    mult = 42
-    gamma = 1 / (mult * np.var(D))
-    A = rbf_kernel(D, gamma=gamma)  # Gaussian distance as affinity metric
-
-
-    # CLUSTERING
-    epsilon = 0.2
-    min_pts = 7
+    Returns:
+        clusters: vector indicating cluster for each point in X
+        noise: vector of points not clustered
+    """
 
     clustered_elements = [False for _ in range(len(X))]
     clusters = []
@@ -66,9 +54,5 @@ def main():
             if cluster != []:
                 clusters.append(cluster)
     noise = [i for i in range(len(clustered_elements)) if not clustered_elements[i]]
-
-    plot_clustering_result(X, A, clusters, noise)
-
-if __name__ == '__main__':
-    main()
+    return clusters, noise
 
