@@ -7,7 +7,7 @@ from sklearn import datasets
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.preprocessing import StandardScaler
-
+from utils import plot_clustering_result
 
 def is_core_point(n, min_pts):
     return n >= min_pts
@@ -33,21 +33,7 @@ def extract_cluster(point, D, min_pts, epsilon, clustered_elements, neighbor_sea
         for q in neighborhood:
             if is_core_point(len(neighborhood), min_pts):
                 cluster += extract_cluster(q, D, min_pts, epsilon, clustered_elements, True)
-    return cluster        
-
-
-def generate_cluster_matrix(A, clusters):
-    res = np.empty_like(A)
-    supp = []
-    for i in range(len(clusters)):
-        for j in range(len(clusters[i])):
-            supp.append(clusters[i][j])
-
-    for i in range(len(supp)):
-        for j in range(len(supp)):
-            res[i, j] = A[supp[i], supp[j]]
-    return res
-
+    return cluster
 
 def main():
     # DATASET GENERATION AND PREPARATION
@@ -81,38 +67,7 @@ def main():
                 clusters.append(cluster)
     noise = [i for i in range(len(clustered_elements)) if not clustered_elements[i]]
 
-
-    # PLOTTING
-    colors = list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', 
-                                '#999999', '#e41a1c', '#dede00']), len(clusters) + 1))
-    symbols = list(islice(cycle(["*","x","+","o",".","^","<",">","P","p","D","d"]),
-                                len(clusters) + 1))
-
-    plt.figure(0)
-    plt.subplot(2, 2, 1)
-    plt.scatter(X[:, 0], X[:, 1], s=10)
-    plt.grid()
-    plt.title("Original Data")
-
-    plt.subplot(2, 2, 2)
-    plt.title("Affinity matrix")
-    sns.heatmap(A, square = True)
-
-    plt.subplot(2, 2, 3)
-    plt.grid()
-    for i in range(len(clusters)):
-        plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
-    plt.scatter(X[noise, 0], X[noise, 1], s=90, color='#000000', marker="X")
-    plt.title("Clustered data (" + str(len(clusters)) + " clusters found)")
-
-    plt.subplot(2, 2, 4)
-    plt.title("Clusters affinity matrix")
-    sns.heatmap(generate_cluster_matrix(A, clusters), square = True)
-
-    manager = plt.get_current_fig_manager()
-    manager.window.showMaximized()
-    plt.show()
-
+    plot_clustering_result(X, A, clusters, noise)
 
 if __name__ == '__main__':
     main()

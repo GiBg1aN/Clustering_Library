@@ -7,7 +7,7 @@ from sklearn import datasets
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import rbf_kernel
 from sklearn.preprocessing import StandardScaler
-from utils import *
+from utils import gaussian_kernel, plot_clustering_result
 
 
 def eigenvector_thresholding(evect, threshold, clustered_elements):
@@ -19,20 +19,6 @@ def eigenvector_thresholding(evect, threshold, clustered_elements):
             clustered_idx.append(i)
             new_clustered_elements.append(i)
     return clustered_idx, new_clustered_elements
-
-
-def generate_cluster_matrix(A, clusters):
-    res = np.empty_like(A)
-    supp = []
-    for i in range(len(clusters)):
-        for j in range(len(clusters[i])):
-            supp.append(clusters[i][j])
-
-    for i in range(len(supp)):
-        for j in range(len(supp)):
-            res[i, j] = A[supp[i], supp[j]]
-    return res
-
 
 def main():
     # DATASET GENERATION AND PREPARATION
@@ -73,37 +59,7 @@ def main():
             continue_clustering = False
         evals[bigger_eig_id] = -float("inf")
 
-
-    # PLOTTING
-    colors = list(islice(cycle(['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', 
-                                '#999999', '#e41a1c', '#dede00']), len(clusters) + 1))
-    symbols = list(islice(cycle(["*","x","+","o",".","^","<",">","P","p","X","D","d"]),
-                                len(clusters) + 1))
-
-    plt.figure(0)
-    plt.subplot(2, 2, 1)
-    plt.scatter(X[:, 0], X[:, 1], s=10)
-    plt.grid()
-    plt.title("Original Data")
-
-    plt.subplot(2, 2, 2)
-    plt.title("Affinity matrix")
-    sns.heatmap(A, square = True)
-
-    plt.subplot(2, 2, 3)
-    plt.grid()
-    for i in range(len(clusters)):
-        plt.scatter(X[clusters[i], 0], X[clusters[i], 1], s=90, color=colors[i], marker=symbols[i])
-    plt.title("Clustered data (" + str(len(clusters)) + " clusters found)")
-
-    plt.subplot(2, 2, 4)
-    plt.title("Clusters affinity matrix")
-    sns.heatmap(generate_cluster_matrix(A, clusters), square = True)
-
-    manager = plt.get_current_fig_manager()
-    manager.window.showMaximized()
-    plt.show()
-
+    plot_clustering_result(X, A, clusters)
 
 if __name__ == '__main__':
     main()
